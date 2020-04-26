@@ -1,0 +1,134 @@
+<?xml version='1.1' encoding='UTF-8'?>
+<project>
+  <actions/>
+  <description>The script will check performance of VM Detection API</description>
+  <keepDependencies>false</keepDependencies>
+  <properties>
+    <hudson.model.ParametersDefinitionProperty>
+      <parameterDefinitions>
+        <hudson.model.StringParameterDefinition>
+          <name>endURL</name>
+          <description>API Endpoint</description>
+          <defaultValue>www.googleapis.com</defaultValue>
+          <trim>true</trim>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>numberOfUsers</name>
+          <description>Total thread to run.</description>
+          <defaultValue>1</defaultValue>
+          <trim>true</trim>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>loopCount</name>
+          <description>Total run </description>
+          <defaultValue>1</defaultValue>
+          <trim>true</trim>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>baseDir</name>
+          <description>All directory will be referred using this
+/home/amde/Automation/</description>
+          <defaultValue>BAS_DIR</defaultValue>
+          <trim>true</trim>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>JmeterHomeDir</name>
+          <description>JmeterDir
+a/apache-jmeter-5.2.1</description>
+          <defaultValue>JM_INST_DIR</defaultValue>
+          <trim>true</trim>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>ReportType</name>
+          <description>Test Functionality</description>
+          <defaultValue>FunctionalityTest</defaultValue>
+          <trim>true</trim>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>scriptDir</name>
+          <description>Script Dir. Where JMX script is added</description>
+          <defaultValue>SCPT_DIR</defaultValue>
+          <trim>true</trim>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>projectType</name>
+          <description>Name of folder for html and type</description>
+          <defaultValue>Script_1</defaultValue>
+          <trim>false</trim>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>email</name>
+          <description>comma separated receipent of individual receipent</description>
+          <defaultValue></defaultValue>
+          <trim>false</trim>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>resultDir</name>
+          <description></description>
+          <defaultValue>$scriptDir/Result/$projectType</defaultValue>
+          <trim>false</trim>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>levels</name>
+          <description>Different Levels of government</description>
+          <defaultValue>administrativeArea1,administrativeArea2</defaultValue>
+          <trim>false</trim>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>roles</name>
+          <description>Different roles in government (this and level will be tested together)</description>
+          <defaultValue>deputyHeadOfGovernment,executiveCouncil</defaultValue>
+          <trim>false</trim>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>protocol</name>
+          <description>Protocal for api endpoint</description>
+          <defaultValue>https</defaultValue>
+          <trim>false</trim>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>User_Agent</name>
+          <description></description>
+          <defaultValue>Test_Infra</defaultValue>
+          <trim>false</trim>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.PasswordParameterDefinition>
+          <name>apiKey</name>
+          <description>Google API KEY</description>
+          <defaultValue>{AQAAABAAAAAQT7uw1jHZ2apAIufPNTUFQEIxgEP9DT4aCichxdPFBTk=}</defaultValue>
+        </hudson.model.PasswordParameterDefinition>
+      </parameterDefinitions>
+    </hudson.model.ParametersDefinitionProperty>
+  </properties>
+  <scm class="hudson.scm.NullSCM"/>
+  <canRoam>true</canRoam>
+  <disabled>false</disabled>
+  <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
+  <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
+  <triggers/>
+  <concurrentBuild>false</concurrentBuild>
+  <builders>
+    <hudson.tasks.Shell>
+      <command>resultDir=&quot;$scriptDir/Result/$projectType&quot;
+mkdir -p $resultDir
+rm -rf $resultDir/JmeterOutput
+chmod -R 777 $resultDir/
+chmod -R 777 $baseDir/
+</command>
+    </hudson.tasks.Shell>
+    <hudson.tasks.Ant plugin="ant@1.11">
+      <targets>all</targets>
+      <buildFile>${baseDir}/BuildFile/detectionBuild.xml</buildFile>
+      <properties>-Dthread=&quot;$numberOfUsers&quot;
+-DreportPause=&quot;$loopCount&quot;</properties>
+    </hudson.tasks.Ant>
+  </builders>
+  <publishers>
+    <hudson.tasks.Mailer plugin="mailer@1.32">
+      <recipients>$email</recipients>
+      <dontNotifyEveryUnstableBuild>false</dontNotifyEveryUnstableBuild>
+      <sendToIndividuals>false</sendToIndividuals>
+    </hudson.tasks.Mailer>
+  </publishers>
+  <buildWrappers/>
+</project>

@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project default="all" name="JMeter Automation" basedir=".">
+
+
+
+        <description>
+
+        Sample build file for use with ant-jmeter.jar
+        See http://www.programmerplanet.org/pages/projects/jmeter-ant-task.php
+
+    To run a test and create the output report:
+        ant -Dtest=script
+
+    To run a test only:
+        ant -Dtest=script run
+
+    To run report on existing test output
+        ant -Dtest=script report
+
+    The "script" parameter is the name of the script without the .jmx suffix.
+
+    Additional options:
+        -Dshow-data=y - include response data in Failure Details
+        -Dtestpath=xyz - path to test file(s) (default user.dir).
+                         N.B. Ant interprets relative paths against the build file
+        -DJmeterHomeDir=.. - path to JMeter home directory (defaults to parent of this build file)
+        -Dreport.title="My Report" - title for html report (default is 'Load Test Results')
+
+        Deprecated:
+        -Dformat=2.0 - use version 2.0 JTL files rather than 2.1
+
+        </description>
+
+        <tstamp>
+                <format pattern="yyyy-MM-dd_HH-mm-ss" property="TIMESTAMP" />
+        </tstamp>
+		<property name="test" value="JMeterResults" />
+		<property name="BASE_DIR" value="${baseDir}"/>
+		<property name="scriptpath" value="${scriptDir}" />
+		<property name="endURL" value="${endURL}" />
+	    <property name="RESULT_DIR" value="${resultDir}"/>
+		<property name="basepath" value="${JmeterHomeDir}/extras/" />
+		<property name="baseDir" value="${baseDirs}" />
+		<property name="stopJmeter" value="${JmeterHomeDir}/bin/shutdown.cmd" />
+		<property name="projectType" value="${projectType}" />
+		<property name="threads" value="${numberOfUsers}" />
+		<property name="titleRpt" value="${titleReport}" />
+		<property name="report.title" value="${titleRpt}" />
+		<property name="apiKey" value="${apiKey}" />
+<property name="User_Agent" value="${User_Agent}" />
+			
+						<property name="roles" value="${roles}" />
+						<property name="levels" value="${levels}" />
+		<property name="loop" value="${loopCount}" />		
+        	<property name="show-data" value="n" />
+		<property name="format" value="2.1" />
+
+		<echo>funcMode = ${baseDir}</echo>
+		<echo>funcMode = ${endURL}</echo>
+		<echo>funcMode = ${loop}</echo>
+		<echo>funcMode = ${threads}</echo>
+		<echo>funcMode = ${JmeterHomeDir}</echo>
+		<echo>funcMode = ${scriptpath}</echo>
+		<echo>funcMode = ${resultDir}</echo>
+
+		<condition property="style_version" value="">
+			<equals arg1="${format}" arg2="2.0" />
+		</condition>
+	
+		<condition property="style_version" value="_21">
+			<equals arg1="${format}" arg2="2.1" />
+		</condition>
+	
+		<condition property="funcMode">
+			<equals arg1="${show-data}" arg2="y" />
+		</condition>
+		
+		<condition property="funcMode" value="false">
+		<not>
+			<equals arg1="${show-data}" arg2="y" />
+		</not>
+		</condition>
+		
+		
+		<path id="jmeter.classpath">
+			<fileset dir="${basepath}">
+			<include name="ant-jmeter*.jar" />
+			</fileset>
+		</path>
+	
+
+	<echo>funcMode = ${endURL}</echo>
+						<echo>funcMode = ${protocol}</echo>
+						<echo>funcMode = ${BASE_DIR}</echo>
+						<echo>funcMode = ${loop}</echo>
+						<echo>funcMode = ${threads}</echo>	
+
+
+		<taskdef classname="org.programmerplanet.ant.taskdefs.jmeter.JMeterTask" classpathref="jmeter.classpath" name="jmeter" />
+			<target depends="run,report" name="all" />
+
+		<target name="run">
+			<echo>funcMode = ${funcMode}</echo>
+			<delete file="${RESULT_DIR}/${test}.html" />
+			<parallel>
+				<sequential>
+					<jmeter jmeterhome="${JmeterHomeDir}" resultlog="${RESULT_DIR}/${TIMESTAMP}/JmeterOutput/${test}.jtl">
+						<jvmarg value="-Xmx3280m"/>
+						<jvmarg value="-Djmeter.save.saveservice.output_format=xml"/>
+						<testplans dir="${scriptpath}" includes="*.jmx" />	
+						<property name="apiBase" value="${endURL}" />
+						<property name="protocol" value="${protocol}" />
+						<property name="perfmonresults" value="${RESULT_DIR}/JmeterOutput/" />
+						<property name="baseDir" value="${BASE_DIR}" />
+						<property name="numberOfUsers" value="${numberOfUsers}" />
+						<property name="loopCount" value="${loopCount}" />
+						<property name="apiKey" value="${apiKey}" />
+						<property name="User_Agent" value="${User_Agent}" />
+						<property name="roles" value="${roles}" />
+						<property name="levels" value="${levels}" />
+						<property name="jmeter.save.saveservice.assertion_results" value="all"/>
+
+
+							
+
+					</jmeter>
+				</sequential>
+			</parallel>
+		</target>
+	
+
+		<property name="lib.dir" value="${JmeterHomeDir}/lib" />
+   
+		<path id="xslt.classpath">
+			<fileset dir="${lib.dir}" includes="xalan*.jar" />
+			<fileset dir="${lib.dir}" includes="serializer*.jar" />
+		</path>
+
+		<target depends="xslt-report,copy-images" name="report">
+			<echo>Report generated at ${report.datestamp}</echo>
+		</target>
+
+		<target depends="_message_xalan" name="xslt-report">
+			<tstamp><format pattern="yyyy/MM/dd HH:mm" property="report.datestamp" /></tstamp>
+			<xslt classpathref="xslt.classpath" force="true" in="${RESULT_DIR}/${TIMESTAMP}/JmeterOutput/${test}.jtl" out="${RESULT_DIR}/${TIMESTAMP}/${test}.html" style="${basepath}/jmeter-results-detail-report${style_version}.xsl">
+				<param expression="${show-data}" name="showData" />
+				<param expression="${projectType} -- ${ReportType}" name="titleReport" />
+				<param expression="${report.datestamp}" name="dateReport" />
+			</xslt>
+		</target>
+    
+		<target depends="verify-images" name="copy-images" unless="samepath">
+			<copy file="${JmeterHomeDir}/extras/expand.png" tofile="${RESULT_DIR}/${TIMESTAMP}/JmeterReport/expand.png" />
+			<copy file="${JmeterHomeDir}/extras/collapse.png" tofile="${RESULT_DIR}/${TIMESTAMP}/JmeterReport/collapse.png" />
+		</target>
+
+		<target name="verify-images">
+			<condition property="samepath">
+					<equals arg1="${RESULT_DIR}" arg2="${basepath}" />
+			</condition>
+		</target>
+
+    
+		<condition property="xalan.present">
+			<and>
+				
+				<available classname="org.apache.xalan.processor.TransformerFactoryImpl" classpathref="xslt.classpath" />
+				<available classname="org.apache.xml.serializer.ExtendedContentHandler" classpathref="xslt.classpath" />
+			</and>
+		</condition>
+
+		<target name="_message_xalan" unless="xalan.present">
+			<echo>Cannot find all xalan and/or serialiser jars</echo>
+			<echo>The XSLT formatting may not work correctly.</echo>
+			<echo>Check you have xalan and serializer jars in ${lib.dir}</echo>
+		</target>
+
+</project>
